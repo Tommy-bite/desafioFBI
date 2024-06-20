@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FBI System - Autenticado</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+</head>
+<body>
+  <div class="container text-center">
+    <h1>Bienvenido, <span id="userEmail"></span></h1>
+    <p>Te has autenticado correctamente.</p>
+    <a id="restrictedLink" href="/restringido" class="btn btn-primary">Ir al área restringida</a>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email');
+      const token = params.get('token');
+      if (email && token) {
+        document.getElementById('userEmail').innerText = email;
+        sessionStorage.setItem('token', token);
+      } else {
+        alert('Faltan datos de autenticación.');
+      }
+
+      document.getElementById('restrictedLink').addEventListener('click', (e) => {
+        e.preventDefault();
+        const authToken = sessionStorage.getItem('token');
+        fetch('/restringido', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        })
+        .then(response => {
+          if (response.redirected) {
+            window.location.href = response.url;
+          } else {
+            return response.text().then(text => {
+              alert('Acceso invalido, error: ' + text);
+            });
+          }
+        })
+        .catch(error => alert('Error: ' + error.message));
+      });
+    });
+  </script>
+</body>
+</html>
